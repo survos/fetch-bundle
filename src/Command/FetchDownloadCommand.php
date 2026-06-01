@@ -152,7 +152,7 @@ final class FetchDownloadCommand
             retry: $this->retry
         );
 
-        $writer = JsonlWriter::open($output); // auto-mkdir parent dir
+        $writer = JsonlWriter::open($output);
 
         $okDocs = 0;
         $okPages = 0;
@@ -261,7 +261,7 @@ final class FetchDownloadCommand
             }
         }
 
-        $writer->close();
+        $writer->finish();
 
         $totalElapsed = \microtime(true) - $t0;
         $io->writeln(''); // newline after \r

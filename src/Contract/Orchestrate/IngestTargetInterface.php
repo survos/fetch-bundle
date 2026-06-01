@@ -5,7 +5,7 @@ namespace Survos\MultiFetchBundle\Contract\Orchestrate;
 
 /**
  * Where extracted items land.
- * The JsonlBundle will provide an adapter that appends to JSONL in order.
+ * Optional JSON-lines adapters can append extracted items in order.
  */
 interface IngestTargetInterface
 {
