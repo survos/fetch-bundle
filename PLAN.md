@@ -56,6 +56,7 @@ Use these as concrete examples while designing:
 - `App\Dataset\Belvedere`: page-number XML API, delay, stop on empty page.
 - `App\Dataset\Victoria`: page-number JSON API, resume from existing JSONL row count.
 - `App\Dataset\Aust`: offset/limit JSON API and multiple output cores.
+- `App\Dataset\Larco`: numeric ID HTML pages, sparse/missing pages, cached HTTP, two-stage fetch-then-parse.
 - `App\Dataset\Walters`: archive download, force refresh option, CSV extraction.
 
 The goal is that these Harvest commands keep only source-specific URL configuration, parsing, and normalization logic.
@@ -127,7 +128,15 @@ The first reusable feature should be a boring, resumable, sequential page fetche
 
 This is useful before any TUI or concurrency work. Concurrency can be layered later by swapping the runner behind the same paginator/extractor/target contracts.
 
-Best first Harvest target: `Victoria`, because it already has explicit `FIRST_PAGE`, `PER_PAGE`, jsonl-bundle row counting, append mode, and `--force` behavior. `Belvedere` is a good second target for `until empty` page-number APIs. `Aust` should wait until multi-output ingest is clearer. `Larco` currently has pre-existing raw data and only writes metadata, so it is not an immediate fetch-loop replacement target.
+Best first Harvest targets:
+
+1. `Victoria`, because it already has explicit `FIRST_PAGE`, `PER_PAGE`, jsonl-bundle row counting, append mode, and `--force` behavior.
+2. `Larco`, because it is actually a strong fit for the bundle once split into two stages:
+   - fetch numeric detail IDs into raw HTML files;
+   - parse raw HTML files into canonical `obj.jsonl`.
+3. `Belvedere`, for `until empty` page-number APIs.
+
+`Aust` should wait until multi-output ingest is clearer.
 
 Suggested first service shape:
 
@@ -148,3 +157,45 @@ $result = $fetchPager->run(new SequentialJsonFetchPlan(
 ```
 
 The actual API should be cleaner than this sketch, but the important point is scope: sequential, resumable, JSONL-backed, easy to call from an existing dataset command.
+
+## Larco Handoff Notes
+
+Harvest now has a useful Larco prototype, but the architecture should change before extracting it fully:
+
+- Do not fetch and parse in the same loop.
+- Stage 1 should download detail HTML pages to disk, probably under a source-specific raw HTML directory such as `05_raw/html/{id}.html`.
+- Stage 2 should parse those saved HTML files into canonical `05_raw/obj.jsonl` rows.
+- The parser belongs in an app-level `LarcoParser` service and can be tested with local HTML fixtures.
+- The bundle should provide the generic numeric-ID fetcher: `firstId`, `lastId`, `limit`, `force`, `delay`, `requestTimeout`, retry/backoff, skip-on-timeout, and progress.
+- Sparse IDs are normal. A 404 or parser-empty page should be counted and skipped, not treated as a failure.
+- Resume should come from jsonl-bundle sidecar/state where possible. For raw HTML downloads, the equivalent state is existing files plus a sidecar/manifest. Do not add app-specific `saveState()` files.
+- jsonl-bundle sidecars probably need an app-specific `extra`/context bag so fetchers can record harmless hints such as last attempted page/ID, last successful page/ID, skipped count, timeout count, and source URL template.
+- Harvest's cached HTTP decorator exposed a problem: a request can appear to hang in the Symfony cached client path. Fetch plans need a hard per-request `max_duration` and should skip timed-out pages.
+- Larco should not preserve Larco's Spanish presentation keys in the new raw JSONL. Since the parser controls the raw rows, write canonical keys directly: `ItemField::TITLE`, `MuseumVocab::CULTURE`, `MuseumVocab::MEDIUM`, `MuseumVocab::SUBJECT`, `MuseumVocab::DIMENSIONS`, etc.
+- Dimensions should be structured before import when possible, matching the dimensions normalizer shape: dimensions rows with `units`, `height`, `width`, `length`, etc.; weight as `amount` plus `units`.
+
+Likely reusable service shape for Larco stage 1:
+
+```php
+$result = $numericIdFetcher->download(new NumericIdDownloadPlan(
+    urlTemplate: 'https://coleccion.museolarco.org/detail/{id}',
+    outputTemplate: $rawHtmlDir . '/{id}.html',
+    firstId: 1,
+    lastId: 47000,
+    force: $force,
+    requestTimeout: 10.0,
+    delaySeconds: $delay,
+    skipStatusCodes: [404],
+));
+```
+
+Likely stage 2 stays mostly in Harvest:
+
+```php
+foreach ($htmlFiles as $id => $htmlFile) {
+    $row = $larcoParser->parseDetailHtml(file_get_contents($htmlFile), $id);
+    if ($row !== null) {
+        $writer->write($row, (string) $row[ItemField::ID]);
+    }
+}
+```
