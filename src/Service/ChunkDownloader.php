@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Service;
+namespace Survos\FetchBundle\Service;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -20,8 +20,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final class ChunkDownloader
 {
     public function __construct(
-        private readonly ?HttpClientInterface $http=null,
-        private readonly ?LoggerInterface $logger = new NullLogger()??null,
+        private readonly HttpClientInterface $http,
+        private readonly LoggerInterface $logger = new NullLogger(),
     ) {
     }
 

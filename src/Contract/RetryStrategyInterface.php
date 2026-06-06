@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract;
+namespace Survos\FetchBundle\Contract;
 
 interface RetryStrategyInterface
 {

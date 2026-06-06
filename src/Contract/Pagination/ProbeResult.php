@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Pagination;
+namespace Survos\FetchBundle\Contract\Pagination;
 
 /** Result of a probe request (e.g., total hits or first cursor token). */
 final class ProbeResult

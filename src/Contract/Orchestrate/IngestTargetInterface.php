@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Orchestrate;
+namespace Survos\FetchBundle\Contract\Orchestrate;
 
 /**
  * Where extracted items land.

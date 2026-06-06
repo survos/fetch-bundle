@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Extract;
+namespace Survos\FetchBundle\Contract\Extract;
 
 /** Extract the items array from a decoded JSON response. */
 interface ExtractorInterface

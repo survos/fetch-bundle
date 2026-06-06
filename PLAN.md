@@ -1,4 +1,4 @@
-# PLAN.md - survos/multi-fetch-bundle
+# PLAN.md - survos/fetch-bundle
 
 ## Status
 
@@ -25,14 +25,14 @@ The package should provide reusable primitives for dataset harvesting:
 - `src/Contract/DTO/*` and `src/Contract/*` are the active contracts used by `SymfonyConcurrentFetcher`.
 - `src/Contract/Fetch/*` and `src/Contract/Retry/*` are parallel draft contracts and should be reconciled or deleted before consumers rely on them.
 - `OrchestratorInterface` references the draft `Contract\Fetch\FetchOptions`, while the implemented fetcher uses `Contract\DTO\FetchOptions`. Normalize this.
-- `SurvosMultiFetchBundle` registers aliases twice and then makes core services public. Clean this up into the modern bundle style used by `claims-bundle`/`zebra-bundle`.
+- DONE: `SurvosFetchBundle` now extends `Survos\Kit\AbstractSurvosBundle`, auto-registers `src/Command/`, and registers core services once with conditional interface aliases (the double-wiring is gone).
 - `FetchDownloadCommand` is useful as a demo, but it should not drive the architecture. A future command family should probably live on a service with method-level `#[AsCommand]`, matching current Survos conventions.
-- `ChunkDownloader` has valuable behavior, but its constructor default `new NullLogger()` expression should be cleaned up and filesystem writes should use Symfony Filesystem where appropriate.
+- `ChunkDownloader` has valuable behavior; its constructor default has been cleaned up (required `HttpClientInterface`, `LoggerInterface = new NullLogger()`). Filesystem writes could still use Symfony Filesystem where appropriate.
 - The Harvest `ForceFreshHttpClient` decorator likely belongs here behind configuration for allowed host suffixes and TTL.
 
 ## Near-Term Tasks
 
-1. Decide package/bundle naming: keep Composer package as `survos/multi-fetch-bundle` for BC or create `survos/fetch-bundle`.
+1. DONE: package/bundle renamed to `survos/fetch-bundle` (namespace `Survos\FetchBundle`, class `SurvosFetchBundle`). No BC alias kept.
 2. Normalize contracts into one namespace and one `FetchOptions` DTO.
 3. Add pagination models:
    - `PageNumberPagination`

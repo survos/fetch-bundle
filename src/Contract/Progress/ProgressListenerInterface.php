@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Progress;
+namespace Survos\FetchBundle\Contract\Progress;
 
 /** High-level progress signals during fetching/planning (optional). */
 interface ProgressListenerInterface

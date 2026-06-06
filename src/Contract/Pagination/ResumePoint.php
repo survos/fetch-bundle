@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Pagination;
+namespace Survos\FetchBundle\Contract\Pagination;
 
 /** Where to resume: next block index or cursor token. */
 final class ResumePoint

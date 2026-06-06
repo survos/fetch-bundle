@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Plan;
+namespace Survos\FetchBundle\Contract\Plan;
 
 /** Turns baseUrl and query arrays into canonical URLs. */
 interface UrlBuilderInterface

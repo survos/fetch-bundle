@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Fetch;
+namespace Survos\FetchBundle\Contract\Fetch;
 
 /** Immutable options for concurrent fetching. */
 final class FetchOptions

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract;
+namespace Survos\FetchBundle\Contract;
 
-use Survos\MultiFetchBundle\Contract\DTO\FetchOptions;
+use Survos\FetchBundle\Contract\DTO\FetchOptions;
 
 interface ConcurrentFetcherInterface
 {

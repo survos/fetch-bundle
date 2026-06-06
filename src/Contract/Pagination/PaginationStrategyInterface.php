@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Pagination;
+namespace Survos\FetchBundle\Contract\Pagination;
 
 /**
  * Produces a sequence of units (e.g., offset blocks, page numbers, or cursor requests)

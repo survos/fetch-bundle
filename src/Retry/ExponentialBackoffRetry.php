@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Retry;
+namespace Survos\FetchBundle\Retry;
 
-use Survos\MultiFetchBundle\Contract\RetryStrategyInterface;
+use Survos\FetchBundle\Contract\RetryStrategyInterface;
 
 final class ExponentialBackoffRetry implements RetryStrategyInterface
 {

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\DTO;
+namespace Survos\FetchBundle\Contract\DTO;
 
-use Survos\MultiFetchBundle\Contract\RetryStrategyInterface;
+use Survos\FetchBundle\Contract\RetryStrategyInterface;
 
 final class FetchOptions
 {

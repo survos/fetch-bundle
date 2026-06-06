@@ -1,6 +1,6 @@
 {
     "name": "survos/fetch-bundle",
-    "description": "concurrent fetch for scraping json",
+    "description": "HTTP fetch utilities for Symfony: resumable chunk downloads, caching, retry/backoff, and concurrent fetch into JSONL",
     "license": "MIT",
     "type": "symfony-bundle",
     "require": {
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Survos\\MultiFetchBundle\\": "src/"
+            "Survos\\FetchBundle\\": "src/"
         }
     },
     "prefer-stable": true

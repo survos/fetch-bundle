@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Command;
+namespace Survos\FetchBundle\Command;
 
-use Survos\MultiFetchBundle\Contract\ConcurrentFetcherInterface;
-use Survos\MultiFetchBundle\Contract\DTO\FetchOptions;
-use Survos\MultiFetchBundle\Contract\RetryStrategyInterface;
+use Survos\FetchBundle\Contract\ConcurrentFetcherInterface;
+use Survos\FetchBundle\Contract\DTO\FetchOptions;
+use Survos\FetchBundle\Contract\RetryStrategyInterface;
 use Survos\JsonlBundle\IO\JsonlWriter;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;

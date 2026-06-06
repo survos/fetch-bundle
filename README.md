@@ -11,7 +11,7 @@ This bundle started as `multi-fetch-bundle`, an experiment around parallel API f
 - JSONL output through `survos/jsonl-bundle`;
 - optional HTTP cache helpers for source APIs that do not send useful cache headers.
 
-The current package name is still `survos/multi-fetch-bundle`, but the intended direction is a general `fetch-bundle`, where "multi" is just one execution mode.
+The package is `survos/fetch-bundle`. "Multi" (concurrent fetching) is just one execution mode; the resumable `ChunkDownloader` and cache helpers stand on their own.
 
 ## Current Services
 
@@ -30,8 +30,8 @@ The current package name is still `survos/multi-fetch-bundle`, but the intended 
 ## Example
 
 ```php
-use Survos\MultiFetchBundle\Contract\ConcurrentFetcherInterface;
-use Survos\MultiFetchBundle\Contract\DTO\FetchOptions;
+use Survos\FetchBundle\Contract\ConcurrentFetcherInterface;
+use Survos\FetchBundle\Contract\DTO\FetchOptions;
 
 final class DatasetFetcher
 {

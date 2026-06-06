@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Fetch;
+namespace Survos\FetchBundle\Fetch;
 
 use Psr\Log\LoggerInterface;
-use Survos\MultiFetchBundle\Contract\ConcurrentFetcherInterface;
-use Survos\MultiFetchBundle\Contract\DTO\FetchOptions;
-use Survos\MultiFetchBundle\Contract\RetryStrategyInterface;
+use Survos\FetchBundle\Contract\ConcurrentFetcherInterface;
+use Survos\FetchBundle\Contract\DTO\FetchOptions;
+use Survos\FetchBundle\Contract\RetryStrategyInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 

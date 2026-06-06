@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Orchestrate;
+namespace Survos\FetchBundle\Contract\Orchestrate;
 
-use Survos\MultiFetchBundle\Contract\Fetch\FetchOptions;
-use Survos\MultiFetchBundle\Contract\Pagination\ProbeResult;
-use Survos\MultiFetchBundle\Contract\Pagination\ResumePoint;
+use Survos\FetchBundle\Contract\Fetch\FetchOptions;
+use Survos\FetchBundle\Contract\Pagination\ProbeResult;
+use Survos\FetchBundle\Contract\Pagination\ResumePoint;
 
 /**
  * High-level orchestration: given a set of planned units, fetch them concurrently,

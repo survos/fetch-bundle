@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\MultiFetchBundle\Contract\Fetch;
+namespace Survos\FetchBundle\Contract\Fetch;
 
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
