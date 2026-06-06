@@ -1,5 +1,5 @@
 {
-    "name": "survos/multi-fetch-bundle",
+    "name": "survos/fetch-bundle",
     "description": "concurrent fetch for scraping json",
     "license": "MIT",
     "type": "symfony-bundle",
