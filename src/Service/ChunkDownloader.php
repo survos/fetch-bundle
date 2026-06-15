@@ -97,6 +97,10 @@ final class ChunkDownloader
 
         $clientOptions = [
             'headers' => $requestHeaders,
+            // We stream the body straight to a file, so there is no reason for the
+            // HttpClient to also buffer the full response in memory — disabling this
+            // keeps memory flat regardless of file size (no OOM on large downloads).
+            'buffer' => false,
         ];
         if ($timeout !== null) {
             if ($timeout <= 0) {
