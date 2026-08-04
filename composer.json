@@ -5,6 +5,7 @@
     "type": "symfony-bundle",
     "require": {
         "php": "^8.5",
+        "symfony/cache": "^8.1",
         "symfony/http-client": "^8.1",
         "symfony/console": "^8.1",
         "symfony/messenger": "^8.1",
