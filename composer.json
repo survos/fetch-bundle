@@ -1,6 +1,6 @@
 {
     "name": "survos/fetch-bundle",
-    "description": "HTTP fetch utilities for Symfony: resumable chunk downloads, caching, retry/backoff, and concurrent fetch into JSONL",
+    "description": "HTTP fetch utilities for Symfony: caching (RFC 9111 or app-controlled TTL), retry/backoff, bounded concurrency, and resumable downloads. Optional JSONL dataset-harvesting pagination on top if survos/jsonl-bundle is installed.",
     "license": "MIT",
     "type": "symfony-bundle",
     "require": {
@@ -8,15 +8,19 @@
         "symfony/cache": "^8.1",
         "symfony/http-client": "^8.1",
         "symfony/console": "^8.1",
-        "symfony/messenger": "^8.1",
-        "symfony/event-dispatcher": "^8.1",
         "psr/log": "^3.0",
         "symfony/framework-bundle": "^8.1",
-        "survos/jsonl-bundle": "^2.6",
         "survos/kit-bundle": "^2.6"
-    }
-    ,
+    },
+    "suggest": {
+        "survos/jsonl-bundle": "For the paginated-fetch-to-JSONL feature (Paginator/PaginatedFetchMessageHandler/multi:fetch command).",
+        "symfony/messenger": "For the paginated-fetch-to-JSONL feature (dispatches one message per page).",
+        "symfony/event-dispatcher": "For the paginated-fetch-to-JSONL feature (PageFetchedEvent)."
+    },
     "require-dev": {
+        "survos/jsonl-bundle": "^2.6",
+        "symfony/messenger": "^8.1",
+        "symfony/event-dispatcher": "^8.1"
     },
     "autoload": {
         "psr-4": {

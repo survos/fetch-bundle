@@ -1,15 +1,14 @@
 # Fetch Bundle
 
-Reusable HTTP fetch utilities for Symfony applications that harvest remote data into JSONL.
+Reusable HTTP fetch primitives for Symfony applications: caching, retry/backoff, bounded concurrency, and resumable downloads. General-purpose -- most consumers just want a cached, retrying HTTP client, not a dataset pipeline.
 
-This bundle started as `multi-fetch-bundle`, an experiment around parallel API fetching. The useful core is broader than concurrency: most dataset fetchers need the same small set of primitives:
+This bundle started as `multi-fetch-bundle`, an experiment around parallel API fetching. The useful core turned out to be broader than concurrency; most consumers need some subset of:
 
-- bounded-concurrency HTTP requests;
-- retry and backoff for transient failures;
-- page planning for offset, page-number, and cursor APIs;
-- resumable downloads for large files;
-- JSONL output through `survos/jsonl-bundle`;
-- optional HTTP cache helpers for source APIs that do not send useful cache headers.
+- HTTP caching, either RFC 9111 (`CachingHttpClientFactory`, obeys the origin's own Cache-Control/Expires) or app-controlled TTL (`PersistentFetcher`, backed by a disposable SQLite pool -- for sources that send no useful caching headers, which is most of them);
+- retry and backoff for transient failures (`ExponentialBackoffRetry`);
+- bounded-concurrency HTTP requests (`SymfonyConcurrentFetcher`);
+- resumable downloads for large files (`ChunkDownloader`);
+- optionally, paginated fetch-to-JSONL for dataset harvesting (`Paginator`/`PaginatedFetchMessageHandler`, page planning for offset, page-number, and cursor APIs) -- only when `survos/jsonl-bundle` is installed, see Dependencies below.
 
 The package is `survos/fetch-bundle`. "Multi" (concurrent fetching) is just one execution mode; the resumable `ChunkDownloader` and cache helpers stand on their own.
 
@@ -21,11 +20,13 @@ The package is `survos/fetch-bundle`. "Multi" (concurrent fetching) is just one 
 
 `ChunkDownloader` downloads large files to `*.part`, supports HTTP Range resume when the source honors it, retries transient failures, and reports byte progress.
 
-`multi:fetch` is an experimental CLI for Solr/JSON/JSON-LD style sources. It writes rows with `Survos\JsonlBundle\IO\JsonlWriter`.
+`PersistentFetcher` (+ `SqliteCachePoolFactory`) caches a fetch by URL+method for as long as the caller says, ignoring the origin's own caching headers -- the right fit for scraping sites that send `no-store` or nothing at all.
+
+`multi:fetch` is an experimental CLI for Solr/JSON/JSON-LD style sources. It writes rows with `Survos\JsonlBundle\IO\JsonlWriter`. Only registered when `survos/jsonl-bundle` is installed.
 
 ## Dependencies
 
-`survos/jsonl-bundle` is a hard dependency because JSONL is the canonical output format for Survos dataset harvesting. This bundle should depend on jsonl-bundle, not copy classes from it.
+`survos/jsonl-bundle` (plus `symfony/messenger` and `symfony/event-dispatcher`) are optional -- `suggest`, not `require`. They're only used by the `Paginate/*` slice (paginated fetch-to-JSONL for dataset harvesting). `SurvosFetchBundle::loadExtension()` registers that slice conditionally behind `class_exists(JsonlWriter::class)`, so an app that just wants `PersistentFetcher`/`SymfonyConcurrentFetcher`/`ChunkDownloader` isn't forced to pull in JSONL tooling or a message bus it doesn't otherwise use.
 
 ## Example
 

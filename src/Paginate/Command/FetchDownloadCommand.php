@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Survos\FetchBundle\Command;
+namespace Survos\FetchBundle\Paginate\Command;
 
 use Survos\FetchBundle\Contract\ConcurrentFetcherInterface;
 use Survos\FetchBundle\Contract\DTO\FetchOptions;
