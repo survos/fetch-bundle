@@ -9,6 +9,7 @@ use Psr\Log\NullLogger;
 use Survos\FetchBundle\Contract\DTO\CachedFetchResult;
 use Survos\FetchBundle\Contract\PersistentFetcherInterface;
 use Survos\FetchBundle\Contract\RetryStrategyInterface;
+use Survos\FetchBundle\Http\WipProxy;
 use Symfony\Component\HttpClient\Exception\TimeoutException;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -84,6 +85,7 @@ final class PersistentFetcher implements PersistentFetcherInterface
         $requestOptions = [
             'max_redirects' => 4,
             'headers' => $headers,
+            ...WipProxy::optionsFor($url),
         ];
         if ($timeout !== null) {
             $requestOptions['timeout'] = $timeout;

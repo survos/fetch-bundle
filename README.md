@@ -20,7 +20,9 @@ The package is `survos/fetch-bundle`. "Multi" (concurrent fetching) is just one 
 
 `ChunkDownloader` downloads large files to `*.part`, supports HTTP Range resume when the source honors it, retries transient failures, and reports byte progress.
 
-`PersistentFetcher` (+ `SqliteCachePoolFactory`) caches a fetch by URL+method for as long as the caller says, ignoring the origin's own caching headers -- the right fit for scraping sites that send `no-store` or nothing at all.
+`PersistentFetcher` (+ `SqliteCachePoolFactory`) caches a fetch by URL+method for as long as the caller says, ignoring the origin's own caching headers -- the right fit for scraping sites that send `no-store` or nothing at all. Every fetch also gets `WipProxy::optionsFor($url)` merged in automatically, so any `*.wip` URL is transparently routed through the local Symfony CLI proxy (127.0.0.1:7080) without callers needing their own `str_contains($url, '.wip')` check.
+
+`WipProxy` centralizes the "route `.wip` hosts through the local dev proxy" convention that used to be copy-pasted ad hoc across services (`optionsFor()` for a one-off `HttpClientInterface` call, `WipProxyHttpClient` to decorate a scoped client's base_uri at construction).
 
 `multi:fetch` is an experimental CLI for Solr/JSON/JSON-LD style sources. It writes rows with `Survos\JsonlBundle\IO\JsonlWriter`. Only registered when `survos/jsonl-bundle` is installed.
 
