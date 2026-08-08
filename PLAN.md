@@ -6,6 +6,8 @@ This bundle is incomplete but contains useful pieces. Treat the current code as 
 
 The copied `SurvosJsonlBundle` class has been removed. JSONL output should use the real `survos/jsonl-bundle` package.
 
+DONE: the caching piece called out below and in Near-Term Tasks is built and tested — `Service/PersistentFetcher.php` + `Cache/SqliteCachePoolFactory.php`, an app-controlled-TTL cache (as opposed to `Http/CachingHttpClientFactory`'s RFC 9111 caching) backed by a disposable SQLite `PdoAdapter` pool. It replaced `survos/scraper-bundle` (now deleted from mono entirely) across every app that used it: kpa, ff, ssai, meili, md. Covered by `tests/` (`PersistentFetcherTest`, `SqliteCachePoolFactoryTest`, `BundleBootTest`) — run with `composer install && vendor/bin/phpunit` from this directory. `survos/jsonl-bundle` (+ `symfony/messenger`, `symfony/event-dispatcher`) moved from `require` to `suggest`/`require-dev`, since they're only needed by the `Paginate/*` slice below — `SurvosFetchBundle` registers that slice conditionally behind `class_exists(JsonlWriter::class)`.
+
 ## Direction
 
 Rename the concept from "multi fetch" to "fetch". Parallel fetching remains an option on the execution engine, not the primary abstraction.
@@ -18,7 +20,7 @@ The package should provide reusable primitives for dataset harvesting:
 - resumable large-file downloads;
 - JSONL ingest targets backed by `survos/jsonl-bundle`;
 - progress callbacks/listeners for CLI commands;
-- HTTP cache decorators/configuration helpers copied from Harvest once generalized.
+- DONE: HTTP cache decorators/configuration helpers copied from Harvest once generalized — see `PersistentFetcher`/`SqliteCachePoolFactory` (app-controlled TTL) alongside the pre-existing `CachingHttpClientFactory` (RFC 9111).
 
 ## Code Review Notes
 
@@ -28,7 +30,7 @@ The package should provide reusable primitives for dataset harvesting:
 - DONE: `SurvosFetchBundle` now extends `Survos\Kit\AbstractSurvosBundle`, auto-registers `src/Command/`, and registers core services once with conditional interface aliases (the double-wiring is gone).
 - `FetchDownloadCommand` is useful as a demo, but it should not drive the architecture. A future command family should probably live on a service with method-level `#[AsCommand]`, matching current Survos conventions.
 - `ChunkDownloader` has valuable behavior; its constructor default has been cleaned up (required `HttpClientInterface`, `LoggerInterface = new NullLogger()`). Filesystem writes could still use Symfony Filesystem where appropriate.
-- The Harvest `ForceFreshHttpClient` decorator likely belongs here behind configuration for allowed host suffixes and TTL.
+- DONE: the Harvest `ForceFreshHttpClient` decorator's job — force-cache regardless of the origin's own headers — is now `PersistentFetcher`. It doesn't do host-suffix allowlisting (the caller decides per-call via `force_fetch`/`ttl`, not per-host config); revisit if a real consumer needs that.
 
 ## Near-Term Tasks
 
@@ -41,11 +43,11 @@ The package should provide reusable primitives for dataset harvesting:
    - `UntilEmptyPagination`
 4. Add a high-level `FetchService`/`FetchOrchestrator` that accepts a paginator, extractor, fetch options, and ingest target.
 5. Add a `JsonlIngestTarget` using `survos/jsonl-bundle`.
-6. Move/generalize Harvest's `ForceFreshHttpClient` decorator into this bundle.
+6. DONE: Move/generalize Harvest's `ForceFreshHttpClient` decorator into this bundle -- `PersistentFetcher`.
 7. Backfill focused tests for:
    - URL planning;
    - concurrency cap;
-   - retry decisions;
+   - DONE: retry decisions -- `tests/Service/PersistentFetcherTest.php` (429-then-success, exhausted-retries-on-5xx, non-retryable-status-not-retried). `SymfonyConcurrentFetcher`'s own retry path still untested.
    - JSONL ingest target writes;
    - resume math.
 
@@ -94,7 +96,7 @@ Replace these pieces first:
 2. `Victoria`: generic page-number loop with resume from JSONL sidecar/count; keep item ID cleanup in Harvest.
 3. `Aust`: generic offset/limit loop; keep row expansion and multi-core routing in Harvest until `IngestTarget` supports multiple outputs cleanly.
 4. `Walters` and `Cleveland`: use `ChunkDownloader` for large archive/blob downloads before local conversion.
-5. Harvest `ForceFreshHttpClient`: move here as a configurable cache helper.
+5. DONE: Harvest `ForceFreshHttpClient`: move here as a configurable cache helper -- `PersistentFetcher`.
 
 The future bundle command should be generic enough for simple cases:
 
