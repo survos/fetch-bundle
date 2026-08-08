@@ -55,7 +55,12 @@ final class SurvosFetchBundle extends AbstractSurvosBundle
             ->setArgument('$cache', new Reference($poolId))
             ->setPublic(false);
         if (!$builder->hasAlias(PersistentFetcherInterface::class)) {
-            $builder->setAlias(PersistentFetcherInterface::class, PersistentFetcher::class)->setPublic(false);
+            // Public (unlike the other aliases below): this is the bundle's headline
+            // consumer-facing service, matching SurvosLocBundle's LocClientInterface alias.
+            // Kept private, it survives compilation only by luck -- as long as some other
+            // registered service happens to reference it -- which isn't guaranteed for a
+            // bundle whose whole point is being injected directly by app code.
+            $builder->setAlias(PersistentFetcherInterface::class, PersistentFetcher::class)->setPublic(true);
         }
 
         // No-DB async JSONL paginator: message handler + kickoff service + demo command.
