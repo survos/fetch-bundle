@@ -44,6 +44,7 @@ final class PersistentFetcher implements PersistentFetcherInterface
         $forceFetch = (bool) ($options['force_fetch'] ?? false);
         $headers = $options['headers'] ?? [];
         $timeout = $options['timeout'] ?? null; // seconds; null = client's own default
+        $maxAttempts = $options['max_attempts'] ?? null; // null = defer to the injected RetryStrategyInterface
 
         $key = $this->cacheKey($method, $url);
 
@@ -51,12 +52,12 @@ final class PersistentFetcher implements PersistentFetcherInterface
             $this->cache->delete($key);
         }
 
-        return $this->cache->get($key, function (ItemInterface $item) use ($method, $url, $headers, $timeout, $ttl) {
+        return $this->cache->get($key, function (ItemInterface $item) use ($method, $url, $headers, $timeout, $ttl, $maxAttempts) {
             if ($ttl > 0) {
                 $item->expiresAfter($ttl);
             }
 
-            return $this->actuallyFetch($method, $url, $headers, $timeout);
+            return $this->actuallyFetch($method, $url, $headers, $timeout, $maxAttempts);
         });
     }
 
@@ -80,7 +81,7 @@ final class PersistentFetcher implements PersistentFetcherInterface
      * RetryStrategyInterface (exponential backoff with jitter) -- same retry contract already
      * used by SymfonyConcurrentFetcher.
      */
-    private function actuallyFetch(string $method, string $url, array $headers, ?float $timeout = null): CachedFetchResult
+    private function actuallyFetch(string $method, string $url, array $headers, ?float $timeout = null, ?int $maxAttempts = null): CachedFetchResult
     {
         $requestOptions = [
             'max_redirects' => 4,
@@ -88,7 +89,12 @@ final class PersistentFetcher implements PersistentFetcherInterface
             ...WipProxy::optionsFor($url),
         ];
         if ($timeout !== null) {
+            // 'timeout' alone is an idle timeout -- a connection that stalls mid-handshake
+            // (dead host, redirect to a dead host) can outlast it. 'max_duration' is a genuine
+            // wall-clock ceiling on the whole request/redirect-chain, so a caller-supplied
+            // timeout actually bounds worst-case time, not just idle gaps.
             $requestOptions['timeout'] = $timeout;
+            $requestOptions['max_duration'] = $timeout;
         }
 
         $attempt = 0;
@@ -98,7 +104,7 @@ final class PersistentFetcher implements PersistentFetcherInterface
                 $response = $this->httpClient->request($method, $url, $requestOptions);
                 $statusCode = $response->getStatusCode();
             } catch (TimeoutException|TransportException $e) {
-                if ($this->retryStrategy->shouldRetry($attempt, null, $e)) {
+                if (($maxAttempts === null || $attempt < $maxAttempts) && $this->retryStrategy->shouldRetry($attempt, null, $e)) {
                     usleep($this->retryStrategy->getDelayMs($attempt, null, $e) * 1000);
                     continue;
                 }
@@ -116,7 +122,9 @@ final class PersistentFetcher implements PersistentFetcherInterface
                 );
             }
 
-            if (\in_array($statusCode, [429, 500, 502, 503, 504], true) && $this->retryStrategy->shouldRetry($attempt, $statusCode, null)) {
+            if (\in_array($statusCode, [429, 500, 502, 503, 504], true)
+                && ($maxAttempts === null || $attempt < $maxAttempts)
+                && $this->retryStrategy->shouldRetry($attempt, $statusCode, null)) {
                 $this->logger->info(sprintf('Retrying %s after status %d (attempt %d)', $url, $statusCode, $attempt));
                 usleep($this->retryStrategy->getDelayMs($attempt, $statusCode, null) * 1000);
                 continue;
