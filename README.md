@@ -1,5 +1,8 @@
 # Fetch Bundle
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/survos/fetch-bundle)](https://packagist.org/packages/survos/fetch-bundle)
+[![License](https://img.shields.io/badge/license-MIT-informational)](LICENSE)
+
 Reusable HTTP fetch primitives for Symfony applications: caching, retry/backoff, bounded concurrency, and resumable downloads. General-purpose -- most consumers just want a cached, retrying HTTP client, not a dataset pipeline.
 
 This bundle started as `multi-fetch-bundle`, an experiment around parallel API fetching. The useful core turned out to be broader than concurrency; most consumers need some subset of:
