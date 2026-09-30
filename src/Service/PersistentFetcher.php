@@ -10,6 +10,10 @@ use Survos\FetchBundle\Contract\DTO\CachedFetchResult;
 use Survos\FetchBundle\Contract\PersistentFetcherInterface;
 use Survos\FetchBundle\Contract\RetryStrategyInterface;
 use Survos\FetchBundle\Http\WipProxy;
+use Symfony\Component\Cache\PruneableInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpClient\Exception\TimeoutException;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -69,6 +73,28 @@ final class PersistentFetcher implements PersistentFetcherInterface
     public function forget(string $url, string $method = 'GET'): void
     {
         $this->cache->delete($this->cacheKey($method, $url));
+    }
+
+    /**
+     * Expired entries are only skipped on read, never removed, so a cache with short-TTL pages
+     * (listing pages refetched every few minutes) grows until something prunes it.
+     */
+    #[AsCommand('fetch:prune', 'delete expired entries from the persistent fetch cache')]
+    public function prune(SymfonyStyle $io): int
+    {
+        if (!$this->cache instanceof PruneableInterface) {
+            $io->note('The fetch cache pool expires its own entries; nothing to prune.');
+
+            return Command::SUCCESS;
+        }
+        if (!$this->cache->prune()) {
+            $io->error('Pruning the fetch cache failed.');
+
+            return Command::FAILURE;
+        }
+        $io->success('Expired fetch cache entries deleted.');
+
+        return Command::SUCCESS;
     }
 
     private function cacheKey(string $method, string $url): string

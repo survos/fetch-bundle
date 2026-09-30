@@ -53,6 +53,7 @@ final class SurvosFetchBundle extends AbstractSurvosBundle
         );
         $builder->autowire(PersistentFetcher::class)
             ->setArgument('$cache', new Reference($poolId))
+            ->setAutoconfigured(true) // for #[AsCommand] on prune()
             ->setPublic(false);
         if (!$builder->hasAlias(PersistentFetcherInterface::class)) {
             // Public (unlike the other aliases below): this is the bundle's headline

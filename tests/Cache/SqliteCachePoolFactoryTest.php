@@ -57,4 +57,43 @@ final class SqliteCachePoolFactoryTest extends TestCase
         $fresh = SqliteCachePoolFactory::createPool($this->dbPath);
         self::assertFalse($fresh->hasItem('key'), 'deleting the sqlite file should behave like a clean, empty cache');
     }
+
+    public function testPoolRunsInWalModeSoReadersDoNotWaitOnWriters(): void
+    {
+        SqliteCachePoolFactory::createPool($this->dbPath)->get('key', fn () => 'value');
+
+        $mode = (new \PDO('sqlite:' . $this->dbPath))->query('PRAGMA journal_mode')->fetchColumn();
+        self::assertSame('wal', $mode);
+    }
+
+    public function testValuesAreStoredCompressed(): void
+    {
+        $html = str_repeat('<p>the same paragraph over and over</p>', 1000);
+        $pool = SqliteCachePoolFactory::createPool($this->dbPath);
+        $pool->get('key', fn () => $html);
+
+        $stored = (new \PDO('sqlite:' . $this->dbPath))->query('SELECT LENGTH(item_data) FROM cache_items')->fetchColumn();
+        self::assertLessThan(\strlen($html) / 10, (int) $stored);
+        self::assertSame($html, $pool->get('key', fn () => 'should not be called'));
+    }
+
+    public function testEntriesWrittenBeforeCompressionStillRead(): void
+    {
+        mkdir(\dirname($this->dbPath), 0775, true);
+        (new PdoAdapter('sqlite:' . $this->dbPath))->get('key', fn () => 'plain value');
+
+        self::assertSame('plain value', SqliteCachePoolFactory::createPool($this->dbPath)->get('key', fn () => 'should not be called'));
+    }
+
+    public function testPruneDeletesExpiredEntries(): void
+    {
+        $pool = SqliteCachePoolFactory::createPool($this->dbPath);
+        $pool->get('short', function ($item) { $item->expiresAfter(1); return 'x'; });
+        $pool->get('forever', fn () => 'y');
+        sleep(2);
+
+        self::assertTrue($pool->prune());
+        $left = (new \PDO('sqlite:' . $this->dbPath))->query('SELECT COUNT(*) FROM cache_items')->fetchColumn();
+        self::assertSame(1, (int) $left);
+    }
 }

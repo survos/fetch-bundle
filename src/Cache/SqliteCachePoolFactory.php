@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Survos\FetchBundle\Cache;
 
 use Symfony\Component\Cache\Adapter\PdoAdapter;
+use Symfony\Component\Cache\Marshaller\DefaultMarshaller;
+use Symfony\Component\Cache\Marshaller\DeflateMarshaller;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 /**
@@ -56,9 +58,18 @@ final class SqliteCachePoolFactory
         return $poolId;
     }
 
+    /** Seconds a writer waits for another process's write lock before giving up. */
+    private const BUSY_TIMEOUT = 5;
+
     /**
      * DI factory (runs lazily, at first use -- not at container compile time): ensures the
-     * containing directory exists before PdoAdapter opens the SQLite file.
+     * containing directory exists before opening the SQLite file.
+     *
+     * Several processes share this file (web requests plus messenger workers), so it runs in WAL
+     * mode -- readers never wait on a writer -- and a writer that does meet another writer waits
+     * up to BUSY_TIMEOUT instead of failing with "database is locked". Values are deflated: they
+     * are mostly HTML, which shrinks to a fraction of its size. Entries written before compression
+     * was on still read fine (DeflateMarshaller falls back to the raw value).
      */
     public static function createPool(string $dbPath): PdoAdapter
     {
@@ -67,7 +78,30 @@ final class SqliteCachePoolFactory
             mkdir($dir, 0775, true);
         }
 
-        // PdoAdapter wants a real PDO DSN ("sqlite:/path"), not a Doctrine DBAL URL ("sqlite:///path").
-        return new PdoAdapter('sqlite:' . $dbPath);
+        $pdo = new \PDO('sqlite:' . $dbPath);
+        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $pdo->setAttribute(\PDO::ATTR_TIMEOUT, self::BUSY_TIMEOUT);
+        // WAL is recorded in the file, so this only writes the first time. Switching takes an
+        // exclusive lock that ignores the busy timeout; if another process is mid-switch, it wins.
+        if ('wal' !== $pdo->query('PRAGMA journal_mode')->fetchColumn()) {
+            try {
+                $pdo->exec('PRAGMA journal_mode = WAL');
+            } catch (\PDOException) {
+            }
+        }
+        $pdo->exec('PRAGMA synchronous = NORMAL');
+
+        $pool = new PdoAdapter($pdo, marshaller: new DeflateMarshaller(new DefaultMarshaller()));
+
+        // PdoAdapter creates its table on the first failed write, which loses that write when
+        // several processes meet a brand-new file at once. Create it here; losing the race is fine.
+        if (!$pdo->query("SELECT 1 FROM sqlite_master WHERE name = 'cache_items'")->fetchColumn()) {
+            try {
+                $pool->createTable();
+            } catch (\PDOException) {
+            }
+        }
+
+        return $pool;
     }
 }
