@@ -9,7 +9,7 @@ use Survos\FetchBundle\Paginate\Event\PageFetchedEvent;
 use Survos\FetchBundle\Paginate\Message\PaginatedFetchMessage;
 use Survos\JsonlBundle\IO\JsonlWriter;
 use Survos\JsonlBundle\Service\JsonlStateService;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
