@@ -5,11 +5,11 @@
     "type": "symfony-bundle",
     "require": {
         "php": "^8.5",
-        "symfony/cache": "^8.1",
-        "symfony/http-client": "^8.1",
-        "symfony/console": "^8.1",
+        "symfony/cache": "^7.4||^8.1",
+        "symfony/http-client": "^7.4||^8.1",
+        "symfony/console": "^7.4||^8.1",
         "psr/log": "^3.0",
-        "symfony/framework-bundle": "^8.1",
+        "symfony/framework-bundle": "^7.4||^8.1",
         "survos/kit-bundle": "^2.6"
     },
     "suggest": {
@@ -19,8 +19,8 @@
     },
     "require-dev": {
         "survos/jsonl-bundle": "^2.6",
-        "symfony/messenger": "^8.1",
-        "symfony/event-dispatcher": "^8.1",
+        "symfony/messenger": "^7.4||^8.1",
+        "symfony/event-dispatcher": "^7.4||^8.1",
         "phpunit/phpunit": "^13.0",
         "phpstan/phpstan": "^2.0"
     },
@@ -36,7 +36,7 @@
     },
     "extra": {
         "symfony": {
-            "require": "^8.1"
+            "require": "^7.4||^8.1"
         }
     },
     "prefer-stable": true
