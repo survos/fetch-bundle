@@ -52,8 +52,9 @@ final class SymfonyConcurrentFetcher implements ConcurrentFetcherInterface
                     'headers'      => $options->defaultHeaders + $meta['headers'],
                     'body'         => $meta['body'],
                     'timeout'      => $options->timeout,
-                    // Try HTTP/2 multiplexing when supported by server
-                    'http_version' => '2.0',
+                    // No forced http_version: curl negotiates HTTP/2 via ALPN where the server
+                    // offers it. Forcing '2.0' broke S3 (smithsonian-open-access): "Remote peer
+                    // returned unexpected data while we expected SETTINGS frame".
                 ]);
 
                 $active[$key] = [
